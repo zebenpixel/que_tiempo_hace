@@ -31,29 +31,6 @@ Ejemplos:
 - Visita la página de AEMET: [Municipios](https://www.aemet.es/es/eltiempo/prediccion/municipios).
 - Busca tu municipio y extrae el código de la URL (ej: `localidad_38038.xml` → código `38038`).
 
-## Salida de ejemplo
-- -> ¿Qué tiempo hace Hoy?
-Previsión para la Localidad: Santa Cruz de Tenerife
-Previsión elaborada el: 24/11/2025
-- -> Humedad Relativa Max y Min ------------------------------
-Humedad máxima: 75% - Demasiada humedad
-Humedad mínima: 55% - Se puede estar
-- -> Humedad Relativa por tramo Horario ------------------------------
-Hora: 00:00, Valor: 70%
-Hora: 06:00, Valor: 65%
-Hora: 12:00, Valor: 55%
-- -> Temperatura ------------------------------
-Temperatura máxima: 22°C
-Temperatura mínima: 18°C
-Sensación térmica máxima: 23°C
-- -> Rayos UV ------------------------------
-Rayos UV: 5 - Ten cuidado con el sol
-- -> Estado del Cielo ------------------------------
-Periodo: 12-18, Descripción: Nuboso
-Periodo: 18-24, Descripción: Poco nuboso
-- -> El código se ejecutó a las 14:30:45 con fecha 24/11/2025
-
-
 ## Notas
 
 - La API de AEMET es pública y no requiere clave API.
