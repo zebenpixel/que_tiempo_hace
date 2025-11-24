@@ -35,6 +35,7 @@ Ejemplos:
 -> ¿Qué tiempo hace Hoy?
 Previsión para la Localidad: Santa Cruz de Tenerife
 Previsión elaborada el: 24/11/2025
+
 -> Humedad Relativa Max y Min ------------------------------
 Humedad máxima: 75% - Demasiada humedad
 Humedad mínima: 55% - Se puede estar
