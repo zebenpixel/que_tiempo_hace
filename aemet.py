@@ -5,7 +5,11 @@
 # Este script consulta la API XML de AEMET para obtener la predicción del tiempo
 # para un municipio específico en España. Muestra información como humedad, temperatura,
 # rayos UV, estado del cielo y viento para el día actual, el siguiente y, si disponible, el día después de mañana.
-#
+# V1.2
+# - Añadida en la función print_humidity_info un chequeo antes de convertir a int: if valor_str is None or not valor_str.strip():
+#   Si es None o vacío, imprime "Valor no disponible" en lugar de fallar.
+# - Añadida en la función print_temperature_info en chequeos para max_temp_str, min_temp_str y max_sens_str: if max_temp_str is not None and max_temp_str.strip():
+# - Añadida en los tramos horarios el chequeo: if valor_str is None or not valor_str.strip(): Esto previene errores similares en temperaturas horarias.
 # V1.1 Mejoras realizadas:
 # - Añadida predicción para mañana y pasado mañana (si disponible).
 # - Añadida extracción e impresión de información sobre el viento (dirección y velocidad por periodos).
@@ -17,13 +21,14 @@
 # - Formateo de salida más limpio y estructurado con separadores y líneas vacías para diferenciar días y secciones.
 # - Uso de logging en lugar de prints directos para mayor control (opcional verbosity).
 # - Corregida DeprecationWarning cambiando 'if dia:' a 'if dia is not None:' para compatibilidad futura.
-# - Añadida información de probabilidad de precipitación.
-# - Hecho la selección de periodos dinámica en lugar de hardcoded.
-# - Añadidas rachas máximas de viento.
+# - Añadida información de probabilidad de precipitación (punto 1).
+# - Hecho la selección de periodos dinámica en lugar de hardcoded (punto 2).
+# - Añadidas rachas máximas de viento (punto 4).
 # - Mantenida la estructura original de evaluación if-elif para humedad máxima y mínima, similar al código proporcionado.
 # - Añadida evaluación para el viento usando if-elif, basada en la velocidad (ej: fuerte, moderado, débil), similar a la estructura de humedad.
 # - Añadida evaluación para cada tramo horario de humedad, similar a max/min, para mostrar descripción por hora.
 # - Añadida evaluación para temperatura máxima, mínima y por tramos horarios usando if-elif (Calor extremo >=30°C, Caluroso 25-29, Templado 20-24, Fresco 10-19, Frío <10, Valor fuera de rango).
+# - Corregido error TypeError en int(None) para valores de humedad y temperatura horarios, agregando chequeos para None o valores inválidos.
 
 import xml.etree.ElementTree as ET
 import requests
@@ -76,6 +81,7 @@ def print_humidity_info(dia, label=""):
     Mantiene la estructura original de evaluación con if-elif para humedad máxima y mínima,
     como en el código proporcionado, para preservar la lógica de evaluación explícita.
     Añadida evaluación similar para cada tramo horario, mostrando descripción por hora.
+    Corregido manejo de None en dato.text para evitar TypeError en int(None).
     """
     humedad = dia.find("humedad_relativa")
     if humedad is None:
@@ -116,6 +122,9 @@ def print_humidity_info(dia, label=""):
             for dato in datos[:3]:  # Primeros 3 tramos disponibles
                 hora = dato.get('hora')
                 valor_str = dato.text
+                if valor_str is None or not valor_str.strip():
+                    logging.info(f" Hora: {hora}:00 - Valor no disponible")
+                    continue
                 try:
                     valor = int(valor_str)
                     # Evaluar cada valor horario con if-elif, similar a max/min
@@ -138,7 +147,13 @@ def print_humidity_info(dia, label=""):
 
 def print_temperature_info(dia, label=""):
     """
-    Imprime información de temperatura y sensación térmica, con evaluación.  """
+    Imprime información de temperatura y sensación térmica, con evaluación.
+    
+    Añadida evaluación con if-elif para temperatura máxima y mínima (Calor extremo >=30°C,
+    Caluroso 25-29, Templado 20-24, Fresco 10-19, Frío <10, Valor fuera de rango).
+    También se incluyen tramos horarios de temperatura con evaluación similar por hora.
+    Corregido manejo de None en dato.text para evitar TypeError en int(None).
+    """
     temperatura = dia.find("temperatura")
     sens_termica = dia.find("sens_termica")
     if temperatura is None or sens_termica is None:
@@ -146,41 +161,54 @@ def print_temperature_info(dia, label=""):
         return
     
     try:
-        max_temp = int(temperatura.find("maxima").text)
-        min_temp = int(temperatura.find("minima").text)
-        max_sens = int(sens_termica.find("maxima").text)
+        max_temp_str = temperatura.find("maxima").text
+        min_temp_str = temperatura.find("minima").text
+        max_sens_str = sens_termica.find("maxima").text
         
         logging.info(f"-> Temperatura Max y Min para {label} " + "-" * 3)
         
-        # Evaluar la temperatura máxima con if-elif
-        if max_temp >= 30:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Calor extremo")
-        elif 25 <= max_temp <= 29:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Caluroso")
-        elif 20 <= max_temp <= 24:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Templado")
-        elif 10 <= max_temp <= 19:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Fresco")
-        elif max_temp < 10:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Frío")
+        # Procesar y evaluar máxima
+        if max_temp_str is not None and max_temp_str.strip():
+            max_temp = int(max_temp_str)
+            if max_temp >= 30:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Calor extremo")
+            elif 25 <= max_temp <= 29:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Caluroso")
+            elif 20 <= max_temp <= 24:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Templado")
+            elif 10 <= max_temp <= 19:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Fresco")
+            elif max_temp < 10:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Frío")
+            else:
+                logging.info(f" Temperatura máxima: {max_temp}°C - Valor fuera de rango")
         else:
-            logging.info(f" Temperatura máxima: {max_temp}°C - Valor fuera de rango")
+            logging.info(" Temperatura máxima - Valor no disponible")
         
-        # Evaluar la temperatura mínima con if-elif
-        if min_temp >= 30:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Calor extremo")
-        elif 25 <= min_temp <= 29:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Caluroso")
-        elif 20 <= min_temp <= 24:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Templado")
-        elif 10 <= min_temp <= 19:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Fresco")
-        elif min_temp < 10:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Frío")
+        # Procesar y evaluar mínima
+        if min_temp_str is not None and min_temp_str.strip():
+            min_temp = int(min_temp_str)
+            if min_temp >= 30:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Calor extremo")
+            elif 25 <= min_temp <= 29:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Caluroso")
+            elif 20 <= min_temp <= 24:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Templado")
+            elif 10 <= min_temp <= 19:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Fresco")
+            elif min_temp < 10:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Frío")
+            else:
+                logging.info(f" Temperatura mínima: {min_temp}°C - Valor fuera de rango")
         else:
-            logging.info(f" Temperatura mínima: {min_temp}°C - Valor fuera de rango")
+            logging.info(" Temperatura mínima - Valor no disponible")
         
-        logging.info(f" Sensación térmica máxima: {max_sens}°C")
+        if max_sens_str is not None and max_sens_str.strip():
+            max_sens = int(max_sens_str)
+            logging.info(f" Sensación térmica máxima: {max_sens}°C")
+        else:
+            logging.info(" Sensación térmica máxima - Valor no disponible")
+        
         logging.info("")  # Línea vacía para separación
         
         # Tramos horarios de temperatura
@@ -190,6 +218,9 @@ def print_temperature_info(dia, label=""):
             for dato in datos[:3]:  # Primeros 3 tramos disponibles
                 hora = dato.get('hora')
                 valor_str = dato.text
+                if valor_str is None or not valor_str.strip():
+                    logging.info(f" Hora: {hora}:00 - Valor no disponible")
+                    continue
                 try:
                     valor = int(valor_str)
                     # Evaluar cada valor horario con if-elif
@@ -198,7 +229,7 @@ def print_temperature_info(dia, label=""):
                     elif 25 <= valor <= 29:
                         descripcion = " - Caluroso"
                     elif 20 <= valor <= 24:
-                            descripcion = " - Templado"
+                        descripcion = " - Templado"
                     elif 10 <= valor <= 19:
                         descripcion = " - Fresco"
                     elif valor < 10:
