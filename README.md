@@ -8,6 +8,7 @@ Un script de Python sencillo y eficiente para consultar la predicción meteorol�
 
 ---
 
+
 ## 🚀 Características
 * **Ligero:** Basado en bibliotecas estándar y `requests`.
 * **Preciso:** Datos directos desde la fuente oficial (AEMET).
@@ -46,6 +47,12 @@ Ejemplos:
 
 - Para Puerto de la Cruz (código 38028):
   python aemet.py 38028
+
+## 📊 Ejemplo de salida
+Al ejecutar el script, obtendrás un reporte detallado en tu terminal como el que se muestra a continuación:
+
+![Ejemplo de ejecución](img1.jpg)
+
 
 📍 ¿Cómo obtener el código de municipio?
 Accede a la web oficial de AEMET Predicción Municipios.
