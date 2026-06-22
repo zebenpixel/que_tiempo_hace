@@ -39,7 +39,6 @@ Ejemplos:
 - Para días futuros, algunos datos detallados (como horarios de humedad o temperatura) podrían no estar disponibles y se indicará en la salida.
 - Si no hay datos para hoy o mañana, mostrará una advertencia.
 - Para más detalles sobre la estructura XML de AEMET, consulta su documentación oficial.
-- La API de AEMET es pública y no requiere clave API.
 - El script selecciona automáticamente la predicción para el día actual.
 - Si no hay datos para hoy, mostrará una advertencia.
 - Para más detalles sobre la estructura XML de AEMET, consulta su documentación oficial.
